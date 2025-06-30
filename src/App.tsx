@@ -8,6 +8,7 @@ import Education from './pages/Education';
 import Social from './pages/Social';
 import Account from './pages/Account';
 import LabServices from './pages/LabServices';
+import Admin from './pages/Admin';
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
           <Route path="/social" element={<Social />} />
           <Route path="/lab-services" element={<LabServices />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </Layout>
     </Router>

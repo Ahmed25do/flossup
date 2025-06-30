@@ -11,7 +11,8 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  Shield
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -30,6 +31,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Social', href: '/social', icon: Users },
     { name: 'Lab Services', href: '/lab-services', icon: Microscope },
     { name: 'Account', href: '/account', icon: User },
+    { name: 'Admin', href: '/admin', icon: Shield },
   ];
 
   const isActive = (path: string) => location.pathname === path;
@@ -114,7 +116,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
       {/* Mobile Bottom Navigation */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-        <div className="grid grid-cols-7 h-16">
+        <div className="grid grid-cols-8 h-16">
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
