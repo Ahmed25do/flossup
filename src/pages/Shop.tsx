@@ -1,20 +1,5 @@
 import React, { useState } from 'react';
-import { 
-  ShoppingCart, 
-  Search, 
-  Stethoscope,
-  Zap,
-  BookOpen,
-  Scissors,
-  Shield,
-  Flask,
-  Settings,
-  Cpu,
-  Smile,
-  CircleDot,
-  Crown,
-  Microscope
-} from 'lucide-react';
+import { ShoppingCart, Search, Stethoscope, Zap, BookOpen, Scissors, Shield, FlaskRound as Flask, Settings, Cpu, Smile, CircleDot, Crown, Microscope } from 'lucide-react';
 
 const Shop = () => {
   const [activeTab, setActiveTab] = useState('التصنيفات');
