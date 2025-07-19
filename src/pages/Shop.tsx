@@ -13,23 +13,6 @@ const Shop = () => {
       color: 'bg-red-50 border-red-200',
       iconColor: 'text-red-500'
     },
-    {
-      id: 'implantology',
-      name: 'Implantology',
-      nameAr: 'زراعة الأسنان',
-      icon: Zap,
-      color: 'bg-blue-50 border-blue-200',
-      iconColor: 'text-blue-500'
-    },
-    {
-      id: 'physical-courses',
-      name: 'Physical Courses',
-      nameAr: 'الدورات الحضورية',
-      icon: BookOpen,
-      color: 'bg-gray-50 border-gray-200',
-      iconColor: 'text-gray-500'
-    },
-    {
       id: 'disposable-material',
       name: 'Disposable Material',
       nameAr: 'المواد المستهلكة',
@@ -45,15 +28,6 @@ const Shop = () => {
       color: 'bg-purple-50 border-purple-200',
       iconColor: 'text-purple-500'
     },
-    {
-      id: 'laboratories',
-      name: 'Laboratories',
-      nameAr: 'المختبرات',
-      icon: Flask,
-      color: 'bg-cyan-50 border-cyan-200',
-      iconColor: 'text-cyan-500'
-    },
-    {
       id: 'machine-inquiries',
       name: 'Machine Inquiries',
       nameAr: 'استفسارات الأجهزة',
