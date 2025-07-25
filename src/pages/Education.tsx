@@ -23,15 +23,29 @@ import {
   Eye,
   Minus,
   Image,
-  Smile
+  Smile,
+  ThumbsUp,
+  MessageCircle,
+  Share,
+  MoreVertical,
+  Pause,
+  Volume2,
+  Maximize,
+  Settings,
+  Heart,
+  Send
 } from 'lucide-react';
 
 const Education = () => {
-  const [activeTab, setActiveTab] = useState<'courses' | 'articles' | 'books' | 'live' | 'my-content'>('courses');
+  const [activeTab, setActiveTab] = useState<'videos' | 'courses' | 'articles' | 'books' | 'live' | 'my-content'>('videos');
   const [savedItems, setSavedItems] = useState<string[]>([]);
   const [contentSubTab, setContentSubTab] = useState<'upload' | 'videos' | 'articles' | 'live' | 'analytics'>('upload');
   const [isLiveModalOpen, setIsLiveModalOpen] = useState(false);
   const [newPost, setNewPost] = useState('');
+  const [videoSubTab, setVideoSubTab] = useState<'lectures' | 'reels'>('lectures');
+  const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
+  const [likedVideos, setLikedVideos] = useState<string[]>([]);
+  const [newComment, setNewComment] = useState('');
 
   const toggleSaved = (id: string) => {
     setSavedItems(prev =>
@@ -40,6 +54,164 @@ const Education = () => {
         : [...prev, id]
     );
   };
+
+  const toggleLike = (id: string) => {
+    setLikedVideos(prev =>
+      prev.includes(id) 
+        ? prev.filter(item => item !== id)
+        : [...prev, id]
+    );
+  };
+
+  // Video content data
+  const lectures = [
+    {
+      id: 'v1',
+      title: 'Advanced Root Canal Techniques - Complete Guide',
+      instructor: 'Dr. Sarah Johnson',
+      duration: '45:30',
+      views: 12847,
+      likes: 1256,
+      comments: 89,
+      uploadDate: '2024-12-01',
+      thumbnail: 'https://images.pexels.com/photos/3786249/pexels-photo-3786249.jpeg?auto=compress&cs=tinysrgb&w=600',
+      category: 'Endodontics',
+      description: 'Comprehensive guide to advanced root canal procedures including latest techniques and instruments.',
+      rating: 4.9,
+      subscribers: 15420
+    },
+    {
+      id: 'v2',
+      title: 'Digital Impressions: Best Practices and Troubleshooting',
+      instructor: 'Dr. Michael Chen',
+      duration: '32:15',
+      views: 8923,
+      likes: 892,
+      comments: 67,
+      uploadDate: '2024-11-28',
+      thumbnail: 'https://images.pexels.com/photos/3845810/pexels-photo-3845810.jpeg?auto=compress&cs=tinysrgb&w=600',
+      category: 'Digital Dentistry',
+      description: 'Learn the best practices for digital impressions and how to troubleshoot common issues.',
+      rating: 4.8,
+      subscribers: 12340
+    },
+    {
+      id: 'v3',
+      title: 'Pediatric Dentistry: Managing Anxious Young Patients',
+      instructor: 'Dr. Emily Rodriguez',
+      duration: '28:45',
+      views: 15632,
+      likes: 1834,
+      comments: 156,
+      uploadDate: '2024-12-05',
+      thumbnail: 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=600',
+      category: 'Pediatric',
+      description: 'Effective strategies for treating anxious children and creating a positive dental experience.',
+      rating: 4.9,
+      subscribers: 18750
+    },
+    {
+      id: 'v4',
+      title: 'Implant Surgery: Step-by-Step Procedure',
+      instructor: 'Dr. Robert Martinez',
+      duration: '52:20',
+      views: 9876,
+      likes: 1123,
+      comments: 78,
+      uploadDate: '2024-11-30',
+      thumbnail: 'https://images.pexels.com/photos/3779709/pexels-photo-3779709.jpeg?auto=compress&cs=tinysrgb&w=600',
+      category: 'Surgery',
+      description: 'Complete implant surgery procedure from planning to final restoration.',
+      rating: 4.7,
+      subscribers: 14230
+    }
+  ];
+
+  const reels = [
+    {
+      id: 'r1',
+      title: 'Quick Tip: Perfect Composite Layering',
+      instructor: 'Dr. Lisa Park',
+      duration: '0:45',
+      views: 25847,
+      likes: 3256,
+      comments: 234,
+      uploadDate: '2024-12-10',
+      thumbnail: 'https://images.pexels.com/photos/3779706/pexels-photo-3779706.jpeg?auto=compress&cs=tinysrgb&w=400',
+      category: 'Cosmetic',
+      description: 'Quick technique for perfect composite layering in anterior restorations.',
+      isReel: true
+    },
+    {
+      id: 'r2',
+      title: 'Injection Technique That Patients Love',
+      instructor: 'Dr. James Wilson',
+      duration: '0:38',
+      views: 18923,
+      likes: 2847,
+      comments: 189,
+      uploadDate: '2024-12-09',
+      thumbnail: 'https://images.pexels.com/photos/263391/pexels-photo-263391.jpeg?auto=compress&cs=tinysrgb&w=400',
+      category: 'Anesthesia',
+      description: 'Pain-free injection technique that will make your patients comfortable.',
+      isReel: true
+    },
+    {
+      id: 'r3',
+      title: 'X-Ray Positioning Made Easy',
+      instructor: 'Dr. Anna Kim',
+      duration: '0:52',
+      views: 14567,
+      likes: 1923,
+      comments: 145,
+      uploadDate: '2024-12-08',
+      thumbnail: 'https://images.pexels.com/photos/3845623/pexels-photo-3845623.jpeg?auto=compress&cs=tinysrgb&w=400',
+      category: 'Radiology',
+      description: 'Simple tricks for perfect X-ray positioning every time.',
+      isReel: true
+    },
+    {
+      id: 'r4',
+      title: 'Crown Prep in 60 Seconds',
+      instructor: 'Dr. David Lee',
+      duration: '1:00',
+      views: 31245,
+      likes: 4123,
+      comments: 298,
+      uploadDate: '2024-12-07',
+      thumbnail: 'https://images.pexels.com/photos/4269697/pexels-photo-4269697.jpeg?auto=compress&cs=tinysrgb&w=400',
+      category: 'Prosthodontics',
+      description: 'Essential crown preparation steps demonstrated quickly.',
+      isReel: true
+    }
+  ];
+
+  const videoComments = [
+    {
+      id: 'c1',
+      author: 'Dr. Mark Thompson',
+      avatar: 'https://images.pexels.com/photos/3845623/pexels-photo-3845623.jpeg?auto=compress&cs=tinysrgb&w=100',
+      content: 'Excellent technique! I\'ve been using this method for years and it works perfectly.',
+      timeAgo: '2 hours ago',
+      likes: 23
+    },
+    {
+      id: 'c2',
+      author: 'Dr. Jennifer Adams',
+      avatar: 'https://images.pexels.com/photos/4269697/pexels-photo-4269697.jpeg?auto=compress&cs=tinysrgb&w=100',
+      content: 'Thank you for sharing this. Very helpful for my practice.',
+      timeAgo: '5 hours ago',
+      likes: 15
+    },
+    {
+      id: 'c3',
+      author: 'Dr. Carlos Rodriguez',
+      avatar: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=100',
+      content: 'Could you make a video about the instruments you use for this procedure?',
+      timeAgo: '1 day ago',
+      likes: 8
+    }
+  ];
 
   const courses = [
     {
@@ -336,18 +508,55 @@ const Education = () => {
     }
   };
 
+  const handleCommentSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newComment.trim()) {
+      console.log('Adding comment:', newComment);
+      setNewComment('');
+    }
+  };
+
+  const VideoPlayer = ({ video }: { video: any }) => (
+    <div className="bg-black rounded-lg overflow-hidden">
+      <div className="relative aspect-video">
+        <img
+          src={video.thumbnail}
+          alt={video.title}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <button className="bg-white bg-opacity-90 rounded-full p-4 hover:bg-opacity-100 transition-all">
+            <Play className="h-8 w-8 text-gray-900 ml-1" />
+          </button>
+        </div>
+        <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-sm">
+          {video.duration}
+        </div>
+        <div className="absolute top-4 right-4 flex space-x-2">
+          <button className="bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75">
+            <Settings className="h-4 w-4" />
+          </button>
+          <button className="bg-black bg-opacity-50 text-white p-2 rounded hover:bg-opacity-75">
+            <Maximize className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900">Educational Resources</h1>
-        <p className="text-gray-600">Advance your dental knowledge with expert-led courses and content</p>
+        <p className="text-gray-600">Advance your dental knowledge with expert-led content</p>
       </div>
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-8">
         <nav className="-mb-px flex space-x-8">
           {[
+            { key: 'videos', label: 'Videos', icon: Video },
             { key: 'courses', label: 'Courses', icon: BookOpen },
             { key: 'articles', label: 'Articles', icon: FileText },
             { key: 'books', label: 'Books', icon: Book },
@@ -400,7 +609,302 @@ const Education = () => {
         </div>
       )}
 
-      {/* Content */}
+      {/* Videos Tab */}
+      {activeTab === 'videos' && (
+        <div className="space-y-6">
+          {/* Video Sub-tabs */}
+          <div className="flex items-center justify-between">
+            <div className="flex space-x-4">
+              <button
+                onClick={() => setVideoSubTab('lectures')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  videoSubTab === 'lectures'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Lectures
+              </button>
+              <button
+                onClick={() => setVideoSubTab('reels')}
+                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                  videoSubTab === 'reels'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Reels
+              </button>
+            </div>
+            
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Search videos..."
+                className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+
+          {/* Video Content */}
+          {videoSubTab === 'lectures' && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Main Video Player */}
+              <div className="lg:col-span-2 space-y-6">
+                {selectedVideo ? (
+                  <div className="space-y-4">
+                    <VideoPlayer video={lectures.find(v => v.id === selectedVideo)} />
+                    
+                    {/* Video Info */}
+                    {(() => {
+                      const video = lectures.find(v => v.id === selectedVideo);
+                      return video ? (
+                        <div className="space-y-4">
+                          <div>
+                            <h2 className="text-xl font-bold text-gray-900 mb-2">{video.title}</h2>
+                            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-4">
+                              <span>{video.views.toLocaleString()} views</span>
+                              <span>•</span>
+                              <span>{video.uploadDate}</span>
+                            </div>
+                          </div>
+
+                          {/* Video Actions */}
+                          <div className="flex items-center justify-between py-4 border-y border-gray-200">
+                            <div className="flex items-center space-x-6">
+                              <button
+                                onClick={() => toggleLike(video.id)}
+                                className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
+                                  likedVideos.includes(video.id)
+                                    ? 'bg-blue-50 text-blue-600'
+                                    : 'hover:bg-gray-100'
+                                }`}
+                              >
+                                <ThumbsUp className={`h-5 w-5 ${likedVideos.includes(video.id) ? 'fill-current' : ''}`} />
+                                <span>{video.likes.toLocaleString()}</span>
+                              </button>
+                              <button className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-100">
+                                <MessageCircle className="h-5 w-5" />
+                                <span>{video.comments}</span>
+                              </button>
+                              <button className="flex items-center space-x-2 px-4 py-2 rounded-lg hover:bg-gray-100">
+                                <Share className="h-5 w-5" />
+                                <span>Share</span>
+                              </button>
+                            </div>
+                            <button
+                              onClick={() => toggleSaved(video.id)}
+                              className="p-2 rounded-lg hover:bg-gray-100"
+                            >
+                              <Bookmark className={`h-5 w-5 ${savedItems.includes(video.id) ? 'fill-current text-blue-600' : ''}`} />
+                            </button>
+                          </div>
+
+                          {/* Instructor Info */}
+                          <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+                            <img
+                              src={video.thumbnail}
+                              alt={video.instructor}
+                              className="h-12 w-12 rounded-full object-cover"
+                            />
+                            <div className="flex-1">
+                              <h3 className="font-semibold text-gray-900">{video.instructor}</h3>
+                              <p className="text-sm text-gray-600">{video.subscribers.toLocaleString()} subscribers</p>
+                            </div>
+                            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                              Subscribe
+                            </button>
+                          </div>
+
+                          {/* Description */}
+                          <div className="p-4 bg-gray-50 rounded-lg">
+                            <p className="text-gray-700">{video.description}</p>
+                          </div>
+
+                          {/* Comments */}
+                          <div className="space-y-4">
+                            <h3 className="text-lg font-semibold text-gray-900">
+                              Comments ({video.comments})
+                            </h3>
+                            
+                            {/* Add Comment */}
+                            <form onSubmit={handleCommentSubmit} className="flex space-x-3">
+                              <img
+                                src="https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=100"
+                                alt="Your avatar"
+                                className="h-10 w-10 rounded-full object-cover"
+                              />
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  value={newComment}
+                                  onChange={(e) => setNewComment(e.target.value)}
+                                  placeholder="Add a comment..."
+                                  className="w-full px-3 py-2 border-b border-gray-300 focus:border-blue-500 outline-none"
+                                />
+                                <div className="flex justify-end mt-2 space-x-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => setNewComment('')}
+                                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    type="submit"
+                                    disabled={!newComment.trim()}
+                                    className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+                                  >
+                                    Comment
+                                  </button>
+                                </div>
+                              </div>
+                            </form>
+
+                            {/* Comments List */}
+                            <div className="space-y-4">
+                              {videoComments.map((comment) => (
+                                <div key={comment.id} className="flex space-x-3">
+                                  <img
+                                    src={comment.avatar}
+                                    alt={comment.author}
+                                    className="h-10 w-10 rounded-full object-cover"
+                                  />
+                                  <div className="flex-1">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <span className="font-medium text-gray-900">{comment.author}</span>
+                                      <span className="text-sm text-gray-500">{comment.timeAgo}</span>
+                                    </div>
+                                    <p className="text-gray-700 mb-2">{comment.content}</p>
+                                    <div className="flex items-center space-x-4 text-sm">
+                                      <button className="flex items-center space-x-1 text-gray-500 hover:text-gray-700">
+                                        <ThumbsUp className="h-4 w-4" />
+                                        <span>{comment.likes}</span>
+                                      </button>
+                                      <button className="text-gray-500 hover:text-gray-700">Reply</button>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ) : null;
+                    })()}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Video className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">Select a video to watch</h3>
+                    <p className="text-gray-600">Choose from our collection of educational lectures</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Video List Sidebar */}
+              <div className="lg:col-span-1">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Recommended</h3>
+                  {lectures.map((video) => (
+                    <div
+                      key={video.id}
+                      onClick={() => setSelectedVideo(video.id)}
+                      className={`cursor-pointer rounded-lg overflow-hidden transition-all hover:shadow-md ${
+                        selectedVideo === video.id ? 'ring-2 ring-blue-500' : ''
+                      }`}
+                    >
+                      <div className="flex space-x-3 p-3 bg-white border border-gray-200 rounded-lg">
+                        <div className="relative flex-shrink-0">
+                          <img
+                            src={video.thumbnail}
+                            alt={video.title}
+                            className="w-24 h-16 object-cover rounded"
+                          />
+                          <div className="absolute bottom-1 right-1 bg-black bg-opacity-75 text-white text-xs px-1 rounded">
+                            {video.duration}
+                          </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-900 line-clamp-2 mb-1">
+                            {video.title}
+                          </h4>
+                          <p className="text-xs text-gray-600 mb-1">{video.instructor}</p>
+                          <div className="flex items-center text-xs text-gray-500 space-x-2">
+                            <span>{video.views.toLocaleString()} views</span>
+                            <span>•</span>
+                            <span>{video.uploadDate}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Reels */}
+          {videoSubTab === 'reels' && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {reels.map((reel) => (
+                <div key={reel.id} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="relative aspect-[9/16]">
+                    <img
+                      src={reel.thumbnail}
+                      alt={reel.title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    
+                    {/* Play Button */}
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <button className="bg-white bg-opacity-90 rounded-full p-3 hover:bg-opacity-100 transition-all">
+                        <Play className="h-6 w-6 text-gray-900 ml-0.5" />
+                      </button>
+                    </div>
+
+                    {/* Duration */}
+                    <div className="absolute top-3 right-3 bg-black bg-opacity-75 text-white px-2 py-1 rounded text-xs">
+                      {reel.duration}
+                    </div>
+
+                    {/* Bottom Info */}
+                    <div className="absolute bottom-0 left-0 right-0 p-4 text-white">
+                      <h3 className="font-semibold text-sm mb-1 line-clamp-2">{reel.title}</h3>
+                      <p className="text-xs opacity-90 mb-2">{reel.instructor}</p>
+                      <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center space-x-3">
+                          <span className="flex items-center">
+                            <Eye className="h-3 w-3 mr-1" />
+                            {reel.views.toLocaleString()}
+                          </span>
+                          <span className="flex items-center">
+                            <Heart className="h-3 w-3 mr-1" />
+                            {reel.likes.toLocaleString()}
+                          </span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSaved(reel.id);
+                          }}
+                          className="p-1"
+                        >
+                          <Bookmark className={`h-4 w-4 ${savedItems.includes(reel.id) ? 'fill-current' : ''}`} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Courses Tab */}
       {activeTab === 'courses' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {courses.map((course) => (

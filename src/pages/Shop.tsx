@@ -1,5 +1,27 @@
 import React, { useState } from 'react';
-import { ShoppingCart, Search, Stethoscope, Zap, BookOpen, Scissors, Shield, FlaskRound as Flask, Settings, Cpu, Smile, CircleDot, Crown, Microscope } from 'lucide-react';
+import { 
+  ShoppingCart, 
+  Search, 
+  Stethoscope, 
+  Zap, 
+  BookOpen, 
+  Scissors, 
+  Shield, 
+  FlaskRound as Flask, 
+  Settings, 
+  Cpu, 
+  Smile, 
+  CircleDot, 
+  Crown, 
+  Microscope,
+  Activity,
+  Wrench,
+  Droplets,
+  Zap as Lightning,
+  Target,
+  Pill,
+  Camera
+} from 'lucide-react';
 
 const Shop = () => {
   const [activeTab, setActiveTab] = useState('التصنيفات');
@@ -9,14 +31,14 @@ const Shop = () => {
       id: 'surgery',
       name: 'Surgery',
       nameAr: 'الجراحة',
-      icon: Stethoscope,
+      icon: Activity,
       color: 'bg-red-50 border-red-200',
       iconColor: 'text-red-500'
     },
     {
       id: 'disposable-material',
       name: 'Disposable Material',
-      nameAr: 'المواد المستهلكة',
+      icon: Target,
       icon: Scissors,
       color: 'bg-green-50 border-green-200',
       iconColor: 'text-green-500'
@@ -25,7 +47,7 @@ const Shop = () => {
       id: 'sterilization-material',
       name: 'Sterilization Material',
       nameAr: 'مواد التعقيم',
-      icon: Shield,
+      icon: Droplets,
       color: 'bg-purple-50 border-purple-200',
       iconColor: 'text-purple-500'
     },
@@ -33,7 +55,7 @@ const Shop = () => {
       id: 'machine-inquiries',
       name: 'Machine Inquiries',
       nameAr: 'استفسارات الأجهزة',
-      icon: Settings,
+      icon: Wrench,
       color: 'bg-indigo-50 border-indigo-200',
       iconColor: 'text-indigo-500'
     },
@@ -41,7 +63,7 @@ const Shop = () => {
       id: 'machines',
       name: 'Machines',
       nameAr: 'الأجهزة',
-      icon: Cpu,
+      icon: Lightning,
       color: 'bg-teal-50 border-teal-200',
       iconColor: 'text-teal-500'
     },
@@ -65,7 +87,7 @@ const Shop = () => {
       id: 'anesthesia',
       name: 'Anesthesia',
       nameAr: 'التخدير',
-      icon: Crown,
+      icon: Pill,
       color: 'bg-orange-50 border-orange-200',
       iconColor: 'text-orange-500'
     },
@@ -73,7 +95,7 @@ const Shop = () => {
       id: 'radiology',
       name: 'Radiology',
       nameAr: 'الأشعة',
-      icon: Microscope,
+      icon: Camera,
       color: 'bg-emerald-50 border-emerald-200',
       iconColor: 'text-emerald-500'
     }
