@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './components/AuthProvider';
 import Layout from './components/Layout';
 import Home from './pages/Home';
 import Shop from './pages/Shop';
@@ -11,19 +12,21 @@ import LabServices from './pages/LabServices';
 
 function App() {
   return (
-    <Router>
-      <Layout>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/chat" element={<Chat />} />
-          <Route path="/education" element={<Education />} />
-          <Route path="/social" element={<Social />} />
-          <Route path="/lab-services" element={<LabServices />} />
-          <Route path="/account" element={<Account />} />
-        </Routes>
-      </Layout>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/education" element={<Education />} />
+            <Route path="/social" element={<Social />} />
+            <Route path="/lab-services" element={<LabServices />} />
+            <Route path="/account" element={<Account />} />
+          </Routes>
+        </Layout>
+      </Router>
+    </AuthProvider>
   );
 }
 

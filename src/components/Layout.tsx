@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useAuthContext } from './AuthProvider';
+import AuthModal from './AuthModal';
+import { signOut } from '../lib/supabase';
 import { 
   Home, 
   ShoppingBag, 
@@ -11,7 +14,8 @@ import {
   Menu,
   X,
   Bell,
-  Search
+  Search,
+  LogOut
 } from 'lucide-react';
 
 interface LayoutProps {
@@ -20,6 +24,8 @@ interface LayoutProps {
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const { user, profile, isAuthenticated } = useAuthContext();
   const location = useLocation();
 
   const navigation = [
@@ -33,6 +39,14 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 md:pb-0">
@@ -66,9 +80,38 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
             {/* Right Side */}
             <div className="flex items-center space-x-4">
-              <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                <Bell className="h-5 w-5" />
-              </button>
+              {isAuthenticated ? (
+                <>
+                  <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+                    <Bell className="h-5 w-5" />
+                  </button>
+                  
+                  <div className="flex items-center space-x-3">
+                    <img
+                      src={profile?.avatar_url || 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=100'}
+                      alt="Profile"
+                      className="h-8 w-8 rounded-full object-cover"
+                    />
+                    <span className="hidden md:block text-sm font-medium text-gray-700">
+                      {profile?.full_name || 'User'}
+                    </span>
+                    <button
+                      onClick={handleSignOut}
+                      className="p-2 text-gray-400 hover:text-gray-600 transition-colors"
+                      title="Sign Out"
+                    >
+                      <LogOut className="h-4 w-4" />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
               
               {/* Mobile menu button */}
               <button
@@ -178,6 +221,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           {children}
         </div>
       </main>
+
+      {/* Auth Modal */}
+      <AuthModal
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+        }}
+      />
     </div>
   );
 };
