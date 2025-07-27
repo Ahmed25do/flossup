@@ -3,11 +3,23 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error('Missing Supabase environment variables');
+// Check if we have valid Supabase credentials
+const hasValidCredentials = supabaseUrl && 
+  supabaseAnonKey && 
+  supabaseUrl !== 'https://your-project-ref.supabase.co' && 
+  supabaseAnonKey !== 'your-anon-key-here';
+
+if (!hasValidCredentials) {
+  console.warn('Supabase credentials not configured. Using mock client.');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create Supabase client or mock client
+export const supabase = hasValidCredentials 
+  ? createClient(supabaseUrl, supabaseAnonKey)
+  : null;
+
+// Helper function to check if Supabase is available
+export const isSupabaseConfigured = () => hasValidCredentials;
 
 // Database types
 export interface Profile {
@@ -162,6 +174,10 @@ export interface LabRequest {
 
 // Authentication helpers
 export const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Please set up your Supabase credentials.');
+  }
+  
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
@@ -175,6 +191,10 @@ export const signUp = async (email: string, password: string, userData: Partial<
 };
 
 export const signIn = async (email: string, password: string) => {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Please set up your Supabase credentials.');
+  }
+  
   const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password
@@ -185,11 +205,19 @@ export const signIn = async (email: string, password: string) => {
 };
 
 export const signOut = async () => {
+  if (!supabase) {
+    throw new Error('Supabase is not configured. Please set up your Supabase credentials.');
+  }
+  
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
 };
 
 export const getCurrentUser = async () => {
+  if (!supabase) {
+    return null;
+  }
+  
   const { data: { user } } = await supabase.auth.getUser();
   return user;
 };

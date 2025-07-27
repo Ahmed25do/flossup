@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuthContext } from './AuthProvider';
 import AuthModal from './AuthModal';
-import { signOut } from '../lib/supabase';
+import { signOut, isSupabaseConfigured } from '../lib/supabase';
 import { 
   Home, 
   ShoppingBag, 
@@ -41,6 +41,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const isActive = (path: string) => location.pathname === path;
 
   const handleSignOut = async () => {
+    if (!isSupabaseConfigured()) {
+      console.warn('Supabase not configured');
+      return;
+    }
+    
     try {
       await signOut();
     } catch (error) {

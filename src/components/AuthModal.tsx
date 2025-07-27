@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Mail, Lock, User, MapPin, GraduationCap } from 'lucide-react';
-import { signIn, signUp, createProfile } from '../lib/supabase';
+import { signIn, signUp, createProfile, isSupabaseConfigured } from '../lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -27,6 +27,12 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
     setLoading(true);
     setError('');
 
+    // Check if Supabase is configured
+    if (!isSupabaseConfigured()) {
+      setError('Database connection not configured. Please set up Supabase credentials.');
+      setLoading(false);
+      return;
+    }
     try {
       if (mode === 'signin') {
         await signIn(formData.email, formData.password);
