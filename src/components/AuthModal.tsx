@@ -41,9 +41,8 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
           full_name: formData.full_name
         });
         
-        // Only create profile if user was created successfully
-        if (result.user && !result.user.email_confirmed_at) {
-          // For users without email confirmation, we can still create the profile
+        // Create profile for the new user
+        if (result.user) {
           await createProfile({
             id: result.user.id,
             email: formData.email,
@@ -53,11 +52,6 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose, onSuccess }) => 
             phone: formData.phone,
             is_verified: false
           });
-        }
-        
-        // Show success message even if email confirmation is pending
-        if (result.user && !result.user.email_confirmed_at) {
-          setError('Account created successfully! You can now sign in.');
         }
       }
       
