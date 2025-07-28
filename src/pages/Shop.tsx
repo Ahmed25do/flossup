@@ -2,25 +2,20 @@ import React, { useState } from 'react';
 import { 
   ShoppingCart, 
   Search, 
-  Stethoscope, 
-  Zap, 
-  BookOpen, 
+  Activity, 
   Scissors, 
-  Shield, 
-  FlaskRound as Flask, 
-  Settings, 
-  Cpu, 
-  Smile, 
-  CircleDot, 
-  Crown, 
-  Microscope,
-  Activity,
+  Droplets, 
   Wrench,
-  Droplets,
   Zap as Lightning,
-  Target,
+  Smile,
+  CircleDot,
   Pill,
-  Camera
+  Camera,
+  Crown,
+  Microscope,
+  FileText,
+  Syringe,
+  Shield
 } from 'lucide-react';
 
 const Shop = () => {
@@ -28,76 +23,124 @@ const Shop = () => {
 
   const categories = [
     {
-      id: 'surgery',
-      name: 'Surgery',
-      nameAr: 'الجراحة',
+      id: 'endodontics',
+      name: 'Endodontics',
+      nameAr: 'علاج الجذور',
       icon: Activity,
-      color: 'bg-red-50 border-red-200',
-      iconColor: 'text-red-500'
+      color: 'bg-blue-50 border-blue-200',
+      iconColor: 'text-blue-500'
     },
     {
-      id: 'disposable-material',
-      name: 'Disposable Material',
-      icon: Target,
-      icon: Scissors,
-      color: 'bg-green-50 border-green-200',
-      iconColor: 'text-green-500'
-    },
-    {
-      id: 'sterilization-material',
-      name: 'Sterilization Material',
-      nameAr: 'مواد التعقيم',
-      icon: Droplets,
+      id: 'prosthodontics',
+      name: 'Prosthodontics',
+      nameAr: 'التركيبات',
+      icon: Crown,
       color: 'bg-purple-50 border-purple-200',
       iconColor: 'text-purple-500'
     },
     {
-      id: 'machine-inquiries',
-      name: 'Machine Inquiries',
-      nameAr: 'استفسارات الأجهزة',
-      icon: Wrench,
+      id: 'restorative',
+      name: 'Restorative',
+      nameAr: 'الترميم',
+      icon: Shield,
+      color: 'bg-green-50 border-green-200',
+      iconColor: 'text-green-500'
+    },
+    {
+      id: 'orthodontics',
+      name: 'Orthodontics',
+      nameAr: 'تقويم الأسنان',
+      icon: Smile,
       color: 'bg-indigo-50 border-indigo-200',
       iconColor: 'text-indigo-500'
+    },
+    {
+      id: 'periodontics',
+      name: 'Periodontics',
+      nameAr: 'أمراض اللثة',
+      icon: Droplets,
+      color: 'bg-red-50 border-red-200',
+      iconColor: 'text-red-500'
+    },
+    {
+      id: 'pedodontics',
+      name: 'Pedodontics',
+      nameAr: 'طب أسنان الأطفال',
+      icon: Smile,
+      color: 'bg-pink-50 border-pink-200',
+      iconColor: 'text-pink-500'
+    },
+    {
+      id: 'surgery',
+      name: 'Surgery',
+      nameAr: 'الجراحة',
+      icon: Scissors,
+      color: 'bg-orange-50 border-orange-200',
+      iconColor: 'text-orange-500'
+    },
+    {
+      id: 'implantology',
+      name: 'Implantology',
+      nameAr: 'زراعة الأسنان',
+      icon: CircleDot,
+      color: 'bg-teal-50 border-teal-200',
+      iconColor: 'text-teal-500'
+    },
+    {
+      id: 'physical-courses',
+      name: 'Physical Courses',
+      nameAr: 'الدورات العملية',
+      icon: FileText,
+      color: 'bg-cyan-50 border-cyan-200',
+      iconColor: 'text-cyan-500'
+    },
+    {
+      id: 'disposable-material',
+      name: 'Disposable Material',
+      nameAr: 'المواد المستهلكة',
+      icon: Scissors,
+      color: 'bg-gray-50 border-gray-200',
+      iconColor: 'text-gray-500'
     },
     {
       id: 'machines',
       name: 'Machines',
       nameAr: 'الأجهزة',
       icon: Lightning,
-      color: 'bg-teal-50 border-teal-200',
-      iconColor: 'text-teal-500'
+      color: 'bg-yellow-50 border-yellow-200',
+      iconColor: 'text-yellow-600'
     },
     {
-      id: 'oral-care-system',
-      name: 'Oral Care System',
-      nameAr: 'نظام العناية بالفم',
-      icon: Smile,
-      color: 'bg-pink-50 border-pink-200',
-      iconColor: 'text-pink-500'
+      id: 'laboratories',
+      name: 'Laboratories',
+      nameAr: 'المختبرات',
+      icon: Microscope,
+      color: 'bg-emerald-50 border-emerald-200',
+      iconColor: 'text-emerald-500'
     },
     {
       id: 'burs',
       name: 'Burs',
       nameAr: 'الأدوات الدوارة',
       icon: CircleDot,
-      color: 'bg-yellow-50 border-yellow-200',
-      iconColor: 'text-yellow-600'
+      color: 'bg-amber-50 border-amber-200',
+      iconColor: 'text-amber-600'
     },
     {
       id: 'anesthesia',
       name: 'Anesthesia',
       nameAr: 'التخدير',
-      icon: Pill,
-      color: 'bg-orange-50 border-orange-200',
-      iconColor: 'text-orange-500'
+      icon: Syringe,
+      color: 'bg-violet-50 border-violet-200',
+      iconColor: 'text-violet-500'
     },
     {
       id: 'radiology',
       name: 'Radiology',
       nameAr: 'الأشعة',
       icon: Camera,
-      color: 'bg-emerald-50 border-emerald-200',
-      iconColor: 'text-emerald-500'
+      color: 'bg-rose-50 border-rose-200',
+      iconColor: 'text-rose-500'
     }
   ];
 
