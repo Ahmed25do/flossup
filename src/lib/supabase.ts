@@ -183,11 +183,7 @@ export const signUp = async (email: string, password: string, userData: Partial<
     password,
     options: {
       data: userData,
-      emailRedirectTo: undefined,
-      data: {
-        ...userData,
-        email_confirm: false
-      }
+      emailRedirectTo: undefined
     }
   });
   
