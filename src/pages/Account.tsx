@@ -26,12 +26,14 @@ import {
   Headphones,
   FileText,
   Video,
-  Book
+  Book,
+  DollarSign
 } from 'lucide-react';
+import SellerDashboard from '../components/SellerDashboard';
 
 const Account = () => {
   const [isEditing, setIsEditing] = useState(false);
-  const [activeTab, setActiveTab] = useState<'profile' | 'settings' | 'notifications' | 'help' | 'contact' | 'tickets'>('profile');
+  const [activeTab, setActiveTab] = useState<'profile' | 'settings' | 'notifications' | 'help' | 'contact' | 'tickets' | 'earnings'>('profile');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [newTicket, setNewTicket] = useState({
     subject: '',
@@ -287,6 +289,7 @@ const Account = () => {
                 { key: 'profile', label: 'Profile', icon: User },
                 { key: 'settings', label: 'Settings', icon: Settings },
                 { key: 'notifications', label: 'Notifications', icon: Bell },
+                { key: 'earnings', label: 'Earnings', icon: DollarSign },
                 { key: 'help', label: 'Help Center', icon: Book },
                 { key: 'contact', label: 'Contact Support', icon: Headphones },
                 { key: 'tickets', label: 'My Tickets', icon: FileText }
@@ -602,6 +605,11 @@ const Account = () => {
                 ))}
               </div>
             </div>
+          )}
+
+          {/* Earnings Tab */}
+          {activeTab === 'earnings' && (
+            <SellerDashboard />
           )}
 
           {/* Help Center Tab */}
