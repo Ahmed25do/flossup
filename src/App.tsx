@@ -9,22 +9,28 @@ import Education from './pages/Education';
 import Social from './pages/Social';
 import Account from './pages/Account';
 import LabServices from './pages/LabServices';
+import AuthPage from './pages/AuthPage';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/education" element={<Education />} />
-            <Route path="/social" element={<Social />} />
-            <Route path="/lab-services" element={<LabServices />} />
-            <Route path="/account" element={<Account />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/auth" element={<AuthPage />} />
+          <Route path="/*" element={
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/shop" element={<Shop />} />
+                <Route path="/chat" element={<Chat />} />
+                <Route path="/education" element={<Education />} />
+                <Route path="/social" element={<Social />} />
+                <Route path="/lab-services" element={<LabServices />} />
+                <Route path="/account" element={<Account />} />
+              </Routes>
+            </Layout>
+          } />
+        </Routes>
       </Router>
     </AuthProvider>
   );

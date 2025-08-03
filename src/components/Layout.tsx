@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuthContext } from './AuthProvider';
 import AuthModal from './AuthModal';
 import { signOut, isSupabaseConfigured } from '../lib/supabase';
@@ -27,6 +27,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const { user, profile, isAuthenticated } = useAuthContext();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const navigation = [
     { name: 'Home', href: '/', icon: Home },
@@ -111,7 +112,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </>
               ) : (
                 <button
-                  onClick={() => setShowAuthModal(true)}
+                  onClick={() => navigate('/auth')}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Sign In
@@ -227,14 +228,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
       </main>
 
-      {/* Auth Modal */}
-      <AuthModal
-        isOpen={showAuthModal}
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false);
-        }}
-      />
     </div>
   );
 };
