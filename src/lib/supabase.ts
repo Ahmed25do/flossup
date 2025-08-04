@@ -402,3 +402,139 @@ export const getCourses = async () => {
   if (error) throw error;
   return data;
 };
+
+// Books
+export const getBooks = async (category?: string) => {
+  let query = supabase
+    .from('books')
+    .select(`
+      *,
+      profiles (
+        id,
+        full_name,
+        avatar_url,
+        specialization
+      )
+    `)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false });
+  
+  if (category) {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) throw error;
+  return data;
+};
+
+// Articles
+export const getArticles = async (category?: string) => {
+  let query = supabase
+    .from('articles')
+    .select(`
+      *,
+      profiles (
+        id,
+        full_name,
+        avatar_url,
+        specialization
+      )
+    `)
+    .eq('is_published', true)
+    .order('created_at', { ascending: false });
+  
+  if (category) {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) throw error;
+  return data;
+};
+
+// Live Events
+export const getLiveEvents = async (category?: string) => {
+  let query = supabase
+    .from('live_events')
+    .select(`
+      *,
+      profiles (
+        id,
+        full_name,
+        avatar_url,
+        specialization
+      )
+    `)
+    .eq('is_published', true)
+    .order('start_time', { ascending: true });
+  
+  if (category) {
+    query = query.eq('category', category);
+  }
+  
+  const { data, error } = await query;
+  
+  if (error) throw error;
+  return data;
+};
+
+// Book purchases
+export const purchaseBook = async (bookId: string, transactionId: string) => {
+  const { data, error } = await supabase
+    .from('book_purchases')
+    .insert([{
+      book_id: bookId,
+      transaction_id: transactionId,
+      price_paid: 0 // This should be set from the transaction
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Event registrations
+export const registerForEvent = async (eventId: string) => {
+  const { data, error } = await supabase
+    .from('event_registrations')
+    .insert([{
+      event_id: eventId
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Article interactions
+export const trackArticleView = async (articleId: string) => {
+  const { data, error } = await supabase
+    .from('article_views')
+    .upsert([{
+      article_id: articleId,
+      viewed_at: new Date().toISOString()
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const likeArticle = async (articleId: string) => {
+  const { data, error } = await supabase
+    .from('article_likes')
+    .insert([{
+      article_id: articleId
+    }])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};

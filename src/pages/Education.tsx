@@ -11,7 +11,13 @@ import {
   List,
   ShoppingCart,
   Heart,
-  Share2
+  Share2,
+  FileText,
+  Calendar,
+  Video,
+  Download,
+  Eye,
+  ThumbsUp
 } from 'lucide-react';
 import PaymentModal from '../components/PaymentModal';
 import { supabase, getCourses, getVideos } from '../lib/supabase';
@@ -19,15 +25,18 @@ import { useAuthContext } from '../components/AuthProvider';
 
 const Education = () => {
   const { user } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<'courses' | 'videos' | 'reels'>('courses');
+  const [activeTab, setActiveTab] = useState<'courses' | 'videos' | 'reels' | 'books' | 'articles' | 'events'>('courses');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [courses, setCourses] = useState<any[]>([]);
   const [videos, setVideos] = useState<any[]>([]);
+  const [books, setBooks] = useState<any[]>([]);
+  const [articles, setArticles] = useState<any[]>([]);
+  const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
-  const [selectedCourse, setSelectedCourse] = useState<any>(null);
+  const [selectedItem, setSelectedItem] = useState<any>(null);
 
   const categories = [
     { id: 'all', name: 'All Categories' },
@@ -39,6 +48,7 @@ const Education = () => {
     { id: 'pediatric', name: 'Pediatric Dentistry' },
     { id: 'cosmetic', name: 'Cosmetic Dentistry' },
     { id: 'implantology', name: 'Implantology' },
+    { id: 'digital_dentistry', name: 'Digital Dentistry' },
   ];
 
   useEffect(() => {
@@ -50,6 +60,9 @@ const Education = () => {
       // Mock data when Supabase is not configured
       setCourses(mockCourses);
       setVideos(mockVideos);
+      setBooks(mockBooks);
+      setArticles(mockArticles);
+      setEvents(mockEvents);
       setLoading(false);
       return;
     }
@@ -60,9 +73,18 @@ const Education = () => {
       if (activeTab === 'courses') {
         const coursesData = await getCourses();
         setCourses(coursesData || []);
-      } else {
+      } else if (activeTab === 'videos' || activeTab === 'reels') {
         const videosData = await getVideos(activeTab === 'reels' ? 'reel' : 'lecture');
         setVideos(videosData || []);
+      } else if (activeTab === 'books') {
+        const { data } = await supabase.from('books').select('*, profiles(full_name, avatar_url, specialization)').eq('is_published', true);
+        setBooks(data || []);
+      } else if (activeTab === 'articles') {
+        const { data } = await supabase.from('articles').select('*, profiles(full_name, avatar_url, specialization)').eq('is_published', true);
+        setArticles(data || []);
+      } else if (activeTab === 'events') {
+        const { data } = await supabase.from('live_events').select('*, profiles(full_name, avatar_url, specialization)').eq('is_published', true);
+        setEvents(data || []);
       }
     } catch (error) {
       console.error('Error fetching content:', error);
@@ -167,8 +189,82 @@ const Education = () => {
     }
   ];
 
+  const mockBooks = [
+    {
+      id: '1',
+      title: 'Advanced Endodontic Techniques',
+      description: 'Comprehensive guide to modern endodontic procedures and case management.',
+      author_id: '1',
+      price: 89.99,
+      pages: 450,
+      category: 'endodontics',
+      cover_image_url: 'https://images.pexels.com/photos/3779709/pexels-photo-3779709.jpeg?auto=compress&cs=tinysrgb&w=600',
+      purchase_count: 234,
+      rating: 4.8,
+      profiles: {
+        full_name: 'Dr. Sarah Johnson',
+        avatar_url: 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=100',
+        specialization: 'Endodontist'
+      }
+    }
+  ];
+
+  const mockArticles = [
+    {
+      id: '1',
+      title: 'Latest Advances in Dental Implantology',
+      summary: 'Overview of cutting-edge implant technologies and their clinical applications.',
+      author_id: '1',
+      category: 'implantology',
+      reading_time: 8,
+      featured_image_url: 'https://images.pexels.com/photos/3779706/pexels-photo-3779706.jpeg?auto=compress&cs=tinysrgb&w=600',
+      views_count: 1520,
+      likes_count: 89,
+      profiles: {
+        full_name: 'Dr. Michael Chen',
+        avatar_url: 'https://images.pexels.com/photos/5215024/pexels-photo-5215024.jpeg?auto=compress&cs=tinysrgb&w=100',
+        specialization: 'Oral Surgeon'
+      }
+    }
+  ];
+
+  const mockEvents = [
+    {
+      id: '1',
+      title: 'Advanced Endodontics Webinar Series',
+      description: 'Join leading endodontists for a comprehensive webinar series covering the latest techniques.',
+      host_id: '1',
+      event_type: 'webinar',
+      category: 'endodontics',
+      start_time: '2024-12-20T18:00:00Z',
+      end_time: '2024-12-20T20:00:00Z',
+      price: 49.99,
+      max_attendees: 500,
+      registration_count: 234,
+      cover_image_url: 'https://images.pexels.com/photos/3779709/pexels-photo-3779709.jpeg?auto=compress&cs=tinysrgb&w=600',
+      rating: 4.9,
+      profiles: {
+        full_name: 'Dr. Sarah Johnson',
+        avatar_url: 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=100',
+        specialization: 'Endodontist'
+      }
+    }
+  ];
+
+  const getCurrentContent = () => {
+    switch (activeTab) {
+      case 'courses': return courses;
+      case 'videos': 
+      case 'reels': return videos;
+      case 'books': return books;
+      case 'articles': return articles;
+      case 'events': return events;
+      default: return [];
+    }
+  };
+
   const filteredContent = () => {
-    const content = activeTab === 'courses' ? courses : videos;
+    const content = getCurrentContent();
     return content.filter(item => {
       const matchesSearch = item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            item.description?.toLowerCase().includes(searchTerm.toLowerCase());
@@ -177,19 +273,28 @@ const Education = () => {
     });
   };
 
-  const handleEnrollCourse = (course: any) => {
-    if (course.price > 0) {
-      setSelectedCourse(course);
+  const handlePurchase = (item: any) => {
+    if (item.price > 0) {
+      setSelectedItem(item);
       setShowPaymentModal(true);
     } else {
-      // Handle free course enrollment
-      console.log('Enrolling in free course:', course.id);
+      // Handle free content access
+      console.log('Accessing free content:', item.id);
     }
   };
 
   const handlePaymentSuccess = (transactionId: string) => {
     console.log('Payment successful:', transactionId);
     // Handle successful enrollment
+  };
+
+  const formatEventDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   const formatDuration = (seconds: number) => {
@@ -215,7 +320,10 @@ const Education = () => {
           {[
             { key: 'courses', label: 'Courses', icon: BookOpen },
             { key: 'videos', label: 'Videos', icon: Play },
-            { key: 'reels', label: 'Reels', icon: Play }
+            { key: 'reels', label: 'Reels', icon: Video },
+            { key: 'books', label: 'Books', icon: BookOpen },
+            { key: 'articles', label: 'Articles', icon: FileText },
+            { key: 'events', label: 'Live Events', icon: Calendar }
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -302,6 +410,11 @@ const Education = () => {
                     {formatDuration(item.duration_seconds)}
                   </div>
                 )}
+                {activeTab === 'events' && (
+                  <div className="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-xs font-medium">
+                    {item.event_type?.toUpperCase()}
+                  </div>
+                )}
               </div>
               
               <div className="p-6 flex-1">
@@ -355,7 +468,7 @@ const Education = () => {
                         {item.price > 0 ? `$${item.price}` : 'Free'}
                       </div>
                       <button
-                        onClick={() => handleEnrollCourse(item)}
+                        onClick={() => handlePurchase(item)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                       >
                         {item.price > 0 ? (
@@ -369,7 +482,7 @@ const Education = () => {
                       </button>
                     </div>
                   </div>
-                ) : (
+                ) : activeTab === 'videos' || activeTab === 'reels' ? (
                   <div className="flex items-center justify-between text-sm text-gray-600">
                     <div className="flex items-center space-x-4">
                       <span>{item.views_count?.toLocaleString()} views</span>
@@ -381,6 +494,92 @@ const Education = () => {
                     <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
                       Watch Now
                     </button>
+                  </div>
+                ) : activeTab === 'books' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-4">
+                        <span className="flex items-center">
+                          <FileText className="h-4 w-4 mr-1" />
+                          {item.pages} pages
+                        </span>
+                        <span className="flex items-center">
+                          <Download className="h-4 w-4 mr-1" />
+                          {item.purchase_count}
+                        </span>
+                        <span className="flex items-center">
+                          <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                          {item.rating}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl font-bold text-blue-600">
+                        ${item.price}
+                      </div>
+                      <button
+                        onClick={() => handlePurchase(item)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
+                      >
+                        <ShoppingCart className="h-4 w-4 mr-2" />
+                        Buy Book
+                      </button>
+                    </div>
+                  </div>
+                ) : activeTab === 'articles' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-4">
+                        <span className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {item.reading_time} min read
+                        </span>
+                        <span className="flex items-center">
+                          <Eye className="h-4 w-4 mr-1" />
+                          {item.views_count?.toLocaleString()}
+                        </span>
+                        <span className="flex items-center">
+                          <ThumbsUp className="h-4 w-4 mr-1" />
+                          {item.likes_count}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                      Read Article
+                    </button>
+                  </div>
+                ) : activeTab === 'events' ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between text-sm text-gray-600">
+                      <div className="flex items-center space-x-4">
+                        <span className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {formatEventDate(item.start_time)}
+                        </span>
+                        <span className="flex items-center">
+                          <Users className="h-4 w-4 mr-1" />
+                          {item.registration_count}/{item.max_attendees}
+                        </span>
+                        <span className="flex items-center">
+                          <Star className="h-4 w-4 mr-1 text-yellow-400 fill-current" />
+                          {item.rating}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {item.price > 0 ? `$${item.price}` : 'Free'}
+                      </div>
+                      <button
+                        onClick={() => handlePurchase(item)}
+                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                      >
+                        {item.price > 0 ? 'Register' : 'Join Free'}
+                      </button>
+                    </div>
                   </div>
                 )}
               </div>
@@ -398,17 +597,17 @@ const Education = () => {
       )}
 
       {/* Payment Modal */}
-      {showPaymentModal && selectedCourse && (
+      {showPaymentModal && selectedItem && (
         <PaymentModal
           isOpen={showPaymentModal}
           onClose={() => setShowPaymentModal(false)}
           onSuccess={handlePaymentSuccess}
-          amount={selectedCourse.price}
+          amount={selectedItem.price}
           currency="USD"
-          sellerId={selectedCourse.instructor_id}
-          commissionRate={10} // 10% commission for courses
-          title="Enroll in Course"
-          description={`Complete your enrollment in "${selectedCourse.title}"`}
+          sellerId={selectedItem.instructor_id || selectedItem.author_id || selectedItem.host_id}
+          commissionRate={activeTab === 'courses' ? 10 : activeTab === 'books' ? 15 : 5}
+          title={activeTab === 'courses' ? 'Enroll in Course' : activeTab === 'books' ? 'Purchase Book' : 'Register for Event'}
+          description={`Complete your ${activeTab === 'courses' ? 'enrollment' : activeTab === 'books' ? 'purchase' : 'registration'} for "${selectedItem.title}"`}
         />
       )}
     </div>
