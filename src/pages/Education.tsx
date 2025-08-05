@@ -581,7 +581,7 @@ const Education = () => {
                       </button>
                     </div>
                   </div>
-                )}
+                ) : null}
               </div>
             </div>
           ))}
