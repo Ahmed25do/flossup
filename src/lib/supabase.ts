@@ -6,8 +6,10 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 // Check if we have valid Supabase credentials
 const hasValidCredentials = supabaseUrl && 
   supabaseAnonKey && 
+  supabaseUrl.startsWith('https://') &&
   supabaseUrl !== 'https://your-project-ref.supabase.co' && 
-  supabaseAnonKey !== 'your-anon-key-here';
+  supabaseAnonKey !== 'your-anon-key-here' &&
+  supabaseAnonKey.length > 20;
 
 if (!hasValidCredentials) {
   console.warn('Supabase credentials not configured. Using mock client.');

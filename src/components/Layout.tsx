@@ -43,7 +43,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const handleSignOut = async () => {
     if (!isSupabaseConfigured()) {
-      console.warn('Supabase not configured');
+      console.warn('Supabase not configured - cannot sign out');
       return;
     }
     

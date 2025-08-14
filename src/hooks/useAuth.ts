@@ -10,6 +10,7 @@ export const useAuth = () => {
   useEffect(() => {
     // If Supabase is not configured, set loading to false and return
     if (!isSupabaseConfigured() || !supabase) {
+      console.warn('Supabase not configured - running in demo mode');
       setLoading(false);
       return;
     }
