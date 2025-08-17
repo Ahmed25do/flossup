@@ -89,7 +89,7 @@ const AuthPage = () => {
       <div className="mb-8 text-center">
         <div className="mb-6">
           <img
-            src="/WhatsApp Image 2025-08-02 at 01.50.51_fa244b23.jpg"
+            src="/WhatsApp Image 2025-06-12 at 07.13.50_9ffe3f55.jpg"
             alt="FlossUp Logo"
             className="h-32 w-auto mx-auto"
           />
