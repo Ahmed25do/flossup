@@ -174,6 +174,47 @@ export interface LabRequest {
   lab_services?: LabService;
 }
 
+export interface Referral {
+  id: string;
+  referring_doctor_id: string;
+  referred_doctor_id: string;
+  patient_name: string;
+  patient_phone?: string;
+  patient_age?: number;
+  patient_gender?: string;
+  specialty_needed: string;
+  procedure_type: string;
+  urgency: 'routine' | 'urgent' | 'emergency';
+  clinical_notes: string;
+  medical_history?: string;
+  current_medications?: string;
+  allergies?: string;
+  x_rays_available: boolean;
+  x_ray_urls?: string[];
+  photos_urls?: string[];
+  preferred_appointment_date?: string;
+  preferred_time_slot?: string;
+  consultation_fee_agreed?: number;
+  status: 'pending' | 'accepted' | 'declined' | 'completed' | 'cancelled';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClinicDoctor {
+  id: string;
+  clinic_name: string;
+  clinic_address?: string;
+  clinic_phone?: string;
+  doctor_id: string;
+  specialties: string[];
+  is_accepting_referrals: boolean;
+  consultation_fee?: number;
+  available_days?: string[];
+  available_hours?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 // Authentication helpers
 export const signUp = async (email: string, password: string, userData: Partial<Profile>) => {
   if (!supabase) {
@@ -536,6 +577,122 @@ export const likeArticle = async (articleId: string) => {
     }])
     .select()
     .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+// Referrals
+export const getReferrals = async (userId: string, type: 'sent' | 'received') => {
+  const column = type === 'sent' ? 'referring_doctor_id' : 'referred_doctor_id';
+  
+  const { data, error } = await supabase
+    .from('referrals')
+    .select(`
+      *,
+      referring_doctor:profiles!referrals_referring_doctor_id_fkey (
+        id,
+        full_name,
+        avatar_url,
+        specialization
+      ),
+      referred_doctor:profiles!referrals_referred_doctor_id_fkey (
+        id,
+        full_name,
+        avatar_url,
+        specialization
+      )
+    `)
+    .eq(column, userId)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const getClinicDoctors = async () => {
+  const { data, error } = await supabase
+    .from('clinic_doctors')
+    .select(`
+      *,
+      profiles (
+        id,
+        full_name,
+        avatar_url,
+        specialization,
+        phone,
+        email
+      )
+    `)
+    .eq('is_accepting_referrals', true)
+    .order('created_at', { ascending: false });
+  
+  if (error) throw error;
+  return data;
+};
+
+export const createReferral = async (referralData: Partial<Referral>) => {
+  const { data, error } = await supabase
+    .from('referrals')
+    .insert([referralData])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const updateReferralStatus = async (referralId: string, status: string) => {
+  const { data, error } = await supabase
+    .from('referrals')
+    .update({ status })
+    .eq('id', referralId)
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const createReferralResponse = async (responseData: any) => {
+  const { data, error } = await supabase
+    .from('referral_responses')
+    .insert([responseData])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const getClinicProfile = async (doctorId: string) => {
+  const { data, error } = await supabase
+    .from('clinic_doctors')
+    .select('*')
+    .eq('doctor_id', doctorId)
+    .single();
+  
+  if (error && error.code !== 'PGRST116') throw error;
+  return data;
+};
+
+export const upsertClinicProfile = async (profileData: Partial<ClinicDoctor>) => {
+  const { data, error } = await supabase
+    .from('clinic_doctors')
+    .upsert([profileData])
+    .select()
+    .single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const getDoctorSpecialties = async () => {
+  const { data, error } = await supabase
+    .from('doctor_specialties')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
   
   if (error) throw error;
   return data;
