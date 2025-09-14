@@ -9,7 +9,7 @@ import Education from './pages/Education';
 import Social from './pages/Social';
 import Account from './pages/Account';
 import LabServices from './pages/LabServices';
-import Referrals from './pages/Referrals';
+import SpecialistDoctor from './pages/SpecialistDoctor';
 import AuthPage from './pages/AuthPage';
 
 function App() {
@@ -27,7 +27,7 @@ function App() {
                 <Route path="/education" element={<Education />} />
                 <Route path="/social" element={<Social />} />
                 <Route path="/lab-services" element={<LabServices />} />
-                <Route path="/referrals" element={<Referrals />} />
+                <Route path="/specialist-doctor" element={<SpecialistDoctor />} />
                 <Route path="/account" element={<Account />} />
               </Routes>
             </Layout>

@@ -17,104 +17,111 @@ import {
   Upload,
   Send,
   Eye,
-  MessageSquare
+  MessageSquare,
+  Award,
+  Building,
+  Stethoscope,
+  Users,
+  TrendingUp
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useAuthContext } from '../components/AuthProvider';
 
-interface ClinicDoctor {
+interface SpecialistDoctor {
   id: string;
   clinic_name: string;
   clinic_address: string;
   clinic_phone: string;
   doctor_id: string;
   specialties: string[];
-  is_accepting_referrals: boolean;
+  governorate: string;
+  city: string;
+  is_accepting_requests: boolean;
   consultation_fee: number;
+  commission_rate: number;
   available_days: string[];
   available_hours: string;
+  rating: number;
+  completed_cases: number;
   profiles: {
     full_name: string;
     avatar_url: string;
     specialization: string;
     phone: string;
     email: string;
+    bio: string;
+    years_experience: number;
+    university: string;
+    graduation_year: number;
   };
 }
 
-interface Referral {
+interface DoctorRequest {
   id: string;
-  referring_doctor_id: string;
-  referred_doctor_id: string;
+  clinic_id: string;
+  clinic_name: string;
+  requesting_doctor_id: string;
+  specialist_doctor_id: string;
+  specialty_needed: string;
+  requested_date: string;
+  requested_time: string;
+  case_description: string;
   patient_name: string;
-  patient_phone: string;
   patient_age: number;
   patient_gender: string;
-  specialty_needed: string;
-  procedure_type: string;
   urgency: string;
-  clinical_notes: string;
-  medical_history: string;
-  current_medications: string;
-  allergies: string;
-  x_rays_available: boolean;
-  x_ray_urls: string[];
-  photos_urls: string[];
-  preferred_appointment_date: string;
-  preferred_time_slot: string;
-  consultation_fee_agreed: number;
   status: string;
+  commission_amount: number;
   created_at: string;
-  referring_doctor: {
+  requesting_doctor: {
     full_name: string;
     avatar_url: string;
     specialization: string;
   };
-  referred_doctor: {
+  specialist_doctor: {
     full_name: string;
     avatar_url: string;
     specialization: string;
   };
 }
 
-const Referrals = () => {
+const SpecialistDoctor = () => {
   const { user, profile } = useAuthContext();
-  const [activeTab, setActiveTab] = useState<'find-doctors' | 'create-referral' | 'my-referrals' | 'received-referrals' | 'my-profile'>('find-doctors');
-  const [clinicDoctors, setClinicDoctors] = useState<ClinicDoctor[]>([]);
-  const [referrals, setReferrals] = useState<Referral[]>([]);
-  const [receivedReferrals, setReceivedReferrals] = useState<Referral[]>([]);
+  const [activeTab, setActiveTab] = useState<'find-specialists' | 'create-request' | 'my-requests' | 'received-requests' | 'my-profile'>('find-specialists');
+  const [specialists, setSpecialists] = useState<SpecialistDoctor[]>([]);
+  const [requests, setRequests] = useState<DoctorRequest[]>([]);
+  const [receivedRequests, setReceivedRequests] = useState<DoctorRequest[]>([]);
   const [specialties, setSpecialties] = useState<any[]>([]);
+  const [governorates, setGovernorates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
-  const [selectedDoctor, setSelectedDoctor] = useState<ClinicDoctor | null>(null);
-  const [showReferralModal, setShowReferralModal] = useState(false);
+  const [selectedGovernorate, setSelectedGovernorate] = useState('');
+  const [selectedDoctor, setSelectedDoctor] = useState<SpecialistDoctor | null>(null);
+  const [showRequestModal, setShowRequestModal] = useState(false);
 
-  const [referralForm, setReferralForm] = useState({
+  const [requestForm, setRequestForm] = useState({
+    clinic_name: '',
+    specialty_needed: '',
+    requested_date: '',
+    requested_time: '',
+    case_description: '',
     patient_name: '',
-    patient_phone: '',
     patient_age: '',
     patient_gender: '',
-    specialty_needed: '',
-    procedure_type: '',
-    urgency: 'routine',
-    clinical_notes: '',
-    medical_history: '',
-    current_medications: '',
-    allergies: '',
-    x_rays_available: false,
-    preferred_appointment_date: '',
-    preferred_time_slot: '',
-    consultation_fee_agreed: ''
+    urgency: 'routine'
   });
 
-  const [clinicProfile, setClinicProfile] = useState({
+  const [doctorProfile, setDoctorProfile] = useState({
     clinic_name: '',
     clinic_address: '',
     clinic_phone: '',
+    governorate: '',
+    city: '',
     specialties: [] as string[],
-    is_accepting_referrals: true,
+    is_accepting_requests: true,
     consultation_fee: '',
+    commission_rate: 10,
     available_days: [] as string[],
     available_hours: '9:00-17:00'
   });
@@ -139,10 +146,19 @@ const Referrals = () => {
         .order('name');
       setSpecialties(specialtiesData || []);
 
-      if (activeTab === 'find-doctors') {
-        // Fetch clinic doctors
-        const { data: doctorsData } = await supabase
-          .from('clinic_doctors')
+      // Set governorates (Egyptian governorates)
+      setGovernorates([
+        'Cairo', 'Alexandria', 'Giza', 'Qalyubia', 'Port Said', 'Suez',
+        'Luxor', 'Aswan', 'Asyut', 'Beheira', 'Beni Suef', 'Dakahlia',
+        'Damietta', 'Fayyum', 'Gharbia', 'Ismailia', 'Kafr el-Sheikh',
+        'Matrouh', 'Minya', 'Monufia', 'New Valley', 'North Sinai',
+        'Qena', 'Red Sea', 'Sharqia', 'Sohag', 'South Sinai'
+      ]);
+
+      if (activeTab === 'find-specialists') {
+        // Fetch specialist doctors
+        const { data: specialistsData } = await supabase
+          .from('specialist_doctors')
           .select(`
             *,
             profiles (
@@ -150,68 +166,75 @@ const Referrals = () => {
               avatar_url,
               specialization,
               phone,
-              email
+              email,
+              bio,
+              years_experience,
+              university,
+              graduation_year
             )
           `)
-          .eq('is_accepting_referrals', true)
+          .eq('is_accepting_requests', true)
           .neq('doctor_id', user.id);
-        setClinicDoctors(doctorsData || []);
-      } else if (activeTab === 'my-referrals') {
-        // Fetch referrals made by current user
-        const { data: referralsData } = await supabase
-          .from('referrals')
+        setSpecialists(specialistsData || []);
+      } else if (activeTab === 'my-requests') {
+        // Fetch requests made by current user
+        const { data: requestsData } = await supabase
+          .from('doctor_requests')
           .select(`
             *,
-            referring_doctor:profiles!referrals_referring_doctor_id_fkey (
+            requesting_doctor:profiles!doctor_requests_requesting_doctor_id_fkey (
               full_name,
               avatar_url,
               specialization
             ),
-            referred_doctor:profiles!referrals_referred_doctor_id_fkey (
+            specialist_doctor:profiles!doctor_requests_specialist_doctor_id_fkey (
               full_name,
               avatar_url,
               specialization
             )
           `)
-          .eq('referring_doctor_id', user.id)
+          .eq('requesting_doctor_id', user.id)
           .order('created_at', { ascending: false });
-        setReferrals(referralsData || []);
-      } else if (activeTab === 'received-referrals') {
-        // Fetch referrals received by current user
+        setRequests(requestsData || []);
+      } else if (activeTab === 'received-requests') {
+        // Fetch requests received by current user
         const { data: receivedData } = await supabase
-          .from('referrals')
+          .from('doctor_requests')
           .select(`
             *,
-            referring_doctor:profiles!referrals_referring_doctor_id_fkey (
+            requesting_doctor:profiles!doctor_requests_requesting_doctor_id_fkey (
               full_name,
               avatar_url,
               specialization
             ),
-            referred_doctor:profiles!referrals_referred_doctor_id_fkey (
+            specialist_doctor:profiles!doctor_requests_specialist_doctor_id_fkey (
               full_name,
               avatar_url,
               specialization
             )
           `)
-          .eq('referred_doctor_id', user.id)
+          .eq('specialist_doctor_id', user.id)
           .order('created_at', { ascending: false });
-        setReceivedReferrals(receivedData || []);
+        setReceivedRequests(receivedData || []);
       } else if (activeTab === 'my-profile') {
-        // Fetch current user's clinic profile
+        // Fetch current user's specialist profile
         const { data: profileData } = await supabase
-          .from('clinic_doctors')
+          .from('specialist_doctors')
           .select('*')
           .eq('doctor_id', user.id)
           .single();
         
         if (profileData) {
-          setClinicProfile({
+          setDoctorProfile({
             clinic_name: profileData.clinic_name || '',
             clinic_address: profileData.clinic_address || '',
             clinic_phone: profileData.clinic_phone || '',
+            governorate: profileData.governorate || '',
+            city: profileData.city || '',
             specialties: profileData.specialties || [],
-            is_accepting_referrals: profileData.is_accepting_referrals,
+            is_accepting_requests: profileData.is_accepting_requests,
             consultation_fee: profileData.consultation_fee?.toString() || '',
+            commission_rate: profileData.commission_rate || 10,
             available_days: profileData.available_days || [],
             available_hours: profileData.available_hours || '9:00-17:00'
           });
@@ -224,110 +247,101 @@ const Referrals = () => {
     }
   };
 
-  const handleCreateReferral = async (e: React.FormEvent) => {
+  const handleCreateRequest = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase || !selectedDoctor) return;
 
     try {
+      const commissionAmount = (parseFloat(selectedDoctor.consultation_fee.toString()) * selectedDoctor.commission_rate) / 100;
+
       const { error } = await supabase
-        .from('referrals')
+        .from('doctor_requests')
         .insert({
-          referring_doctor_id: user.id,
-          referred_doctor_id: selectedDoctor.doctor_id,
-          ...referralForm,
-          patient_age: parseInt(referralForm.patient_age),
-          consultation_fee_agreed: parseFloat(referralForm.consultation_fee_agreed) || null
+          requesting_doctor_id: user.id,
+          specialist_doctor_id: selectedDoctor.doctor_id,
+          clinic_name: requestForm.clinic_name,
+          specialty_needed: requestForm.specialty_needed,
+          requested_date: requestForm.requested_date,
+          requested_time: requestForm.requested_time,
+          case_description: requestForm.case_description,
+          patient_name: requestForm.patient_name,
+          patient_age: parseInt(requestForm.patient_age),
+          patient_gender: requestForm.patient_gender,
+          urgency: requestForm.urgency,
+          commission_amount: commissionAmount
         });
 
       if (error) throw error;
 
-      setShowReferralModal(false);
-      setReferralForm({
+      setShowRequestModal(false);
+      setRequestForm({
+        clinic_name: '',
+        specialty_needed: '',
+        requested_date: '',
+        requested_time: '',
+        case_description: '',
         patient_name: '',
-        patient_phone: '',
         patient_age: '',
         patient_gender: '',
-        specialty_needed: '',
-        procedure_type: '',
-        urgency: 'routine',
-        clinical_notes: '',
-        medical_history: '',
-        current_medications: '',
-        allergies: '',
-        x_rays_available: false,
-        preferred_appointment_date: '',
-        preferred_time_slot: '',
-        consultation_fee_agreed: ''
+        urgency: 'routine'
       });
       setSelectedDoctor(null);
       
-      // Show success message
-      alert('Referral sent successfully!');
+      alert('Request sent successfully!');
     } catch (error) {
-      console.error('Error creating referral:', error);
-      alert('Failed to send referral. Please try again.');
+      console.error('Error creating request:', error);
+      alert('Failed to send request. Please try again.');
     }
   };
 
-  const handleUpdateClinicProfile = async (e: React.FormEvent) => {
+  const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) return;
 
     try {
       const profileData = {
         doctor_id: user.id,
-        ...clinicProfile,
-        consultation_fee: parseFloat(clinicProfile.consultation_fee) || null
+        ...doctorProfile,
+        consultation_fee: parseFloat(doctorProfile.consultation_fee) || null
       };
 
       const { error } = await supabase
-        .from('clinic_doctors')
+        .from('specialist_doctors')
         .upsert(profileData);
 
       if (error) throw error;
 
-      alert('Clinic profile updated successfully!');
+      alert('Profile updated successfully!');
     } catch (error) {
-      console.error('Error updating clinic profile:', error);
+      console.error('Error updating profile:', error);
       alert('Failed to update profile. Please try again.');
     }
   };
 
-  const handleReferralResponse = async (referralId: string, responseType: string, message?: string) => {
+  const handleRequestResponse = async (requestId: string, responseType: string, message?: string) => {
     if (!supabase) return;
 
     try {
-      // Update referral status
       const newStatus = responseType === 'accept' ? 'accepted' : 'declined';
       await supabase
-        .from('referrals')
+        .from('doctor_requests')
         .update({ status: newStatus })
-        .eq('id', referralId);
+        .eq('id', requestId);
 
-      // Create response record
-      await supabase
-        .from('referral_responses')
-        .insert({
-          referral_id: referralId,
-          responding_doctor_id: user.id,
-          response_type: responseType,
-          message: message
-        });
-
-      // Refresh data
       fetchData();
-      alert(`Referral ${responseType}ed successfully!`);
+      alert(`Request ${responseType}ed successfully!`);
     } catch (error) {
-      console.error('Error responding to referral:', error);
-      alert('Failed to respond to referral. Please try again.');
+      console.error('Error responding to request:', error);
+      alert('Failed to respond to request. Please try again.');
     }
   };
 
-  const filteredDoctors = clinicDoctors.filter(doctor => {
+  const filteredSpecialists = specialists.filter(doctor => {
     const matchesSearch = doctor.profiles.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doctor.clinic_name.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesSpecialty = !selectedSpecialty || doctor.specialties.includes(selectedSpecialty);
-    return matchesSearch && matchesSpecialty;
+    const matchesGovernorate = !selectedGovernorate || doctor.governorate === selectedGovernorate;
+    return matchesSearch && matchesSpecialty && matchesGovernorate;
   });
 
   const getStatusColor = (status: string) => {
@@ -355,20 +369,20 @@ const Referrals = () => {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-          <UserPlus className="h-8 w-8 mr-3 text-blue-600" />
-          Doctor Referrals
+          <Stethoscope className="h-8 w-8 mr-3 text-blue-600" />
+          Specialist Doctor
         </h1>
-        <p className="text-gray-600">Refer patients to specialists and manage referral requests</p>
+        <p className="text-gray-600">Connect with specialist doctors and manage consultation requests</p>
       </div>
 
       {/* Tabs */}
       <div className="border-b border-gray-200 mb-8">
         <nav className="-mb-px flex space-x-8">
           {[
-            { key: 'find-doctors', label: 'Find Specialists', icon: Search },
-            { key: 'my-referrals', label: 'My Referrals', icon: Send },
-            { key: 'received-referrals', label: 'Received Referrals', icon: MessageSquare },
-            { key: 'my-profile', label: 'My Clinic Profile', icon: UserPlus }
+            { key: 'find-specialists', label: 'Find Specialists', icon: Search },
+            { key: 'my-requests', label: 'My Requests', icon: Send },
+            { key: 'received-requests', label: 'Received Requests', icon: MessageSquare },
+            { key: 'my-profile', label: 'My Specialist Profile', icon: UserPlus }
           ].map(({ key, label, icon: Icon }) => (
             <button
               key={key}
@@ -387,7 +401,7 @@ const Referrals = () => {
       </div>
 
       {/* Find Specialists Tab */}
-      {activeTab === 'find-doctors' && (
+      {activeTab === 'find-specialists' && (
         <div className="space-y-6">
           {/* Search and Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
@@ -414,29 +428,44 @@ const Referrals = () => {
                 <option key={specialty.id} value={specialty.name}>{specialty.name}</option>
               ))}
             </select>
+
+            <select
+              value={selectedGovernorate}
+              onChange={(e) => setSelectedGovernorate(e.target.value)}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">All Governorates</option>
+              {governorates.map(gov => (
+                <option key={gov} value={gov}>{gov}</option>
+              ))}
+            </select>
           </div>
 
-          {/* Doctors Grid */}
+          {/* Specialists Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDoctors.map((doctor) => (
+            {filteredSpecialists.map((doctor) => (
               <div key={doctor.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow">
                 <div className="flex items-start space-x-4 mb-4">
                   <img
                     src={doctor.profiles.avatar_url || 'https://images.pexels.com/photos/5327585/pexels-photo-5327585.jpeg?auto=compress&cs=tinysrgb&w=100'}
                     alt={doctor.profiles.full_name}
-                    className="h-12 w-12 rounded-full object-cover"
+                    className="h-16 w-16 rounded-full object-cover"
                   />
                   <div className="flex-1">
                     <h3 className="text-lg font-semibold text-gray-900">{doctor.profiles.full_name}</h3>
                     <p className="text-sm text-gray-600">{doctor.profiles.specialization}</p>
                     <p className="text-sm text-blue-600 font-medium">{doctor.clinic_name}</p>
+                    <div className="flex items-center mt-1">
+                      <Star className="h-4 w-4 text-yellow-400 fill-current" />
+                      <span className="text-sm text-gray-600 ml-1">{doctor.rating} ({doctor.completed_cases} cases)</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="space-y-2 mb-4">
                   <div className="flex items-center text-sm text-gray-600">
                     <MapPin className="h-4 w-4 mr-2" />
-                    {doctor.clinic_address}
+                    {doctor.city}, {doctor.governorate}
                   </div>
                   <div className="flex items-center text-sm text-gray-600">
                     <Phone className="h-4 w-4 mr-2" />
@@ -445,6 +474,10 @@ const Referrals = () => {
                   <div className="flex items-center text-sm text-gray-600">
                     <Clock className="h-4 w-4 mr-2" />
                     {doctor.available_hours}
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <Award className="h-4 w-4 mr-2" />
+                    {doctor.profiles.years_experience} years experience
                   </div>
                 </div>
 
@@ -462,31 +495,30 @@ const Referrals = () => {
                 <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                   <div className="text-sm text-gray-600">
                     Fee: <span className="font-semibold text-gray-900">
-                      {doctor.consultation_fee ? `${doctor.consultation_fee} EGP` : 'Contact for pricing'}
+                      {doctor.consultation_fee} EGP
                     </span>
                   </div>
                   <button
                     onClick={() => {
                       setSelectedDoctor(doctor);
-                      setReferralForm(prev => ({
+                      setRequestForm(prev => ({
                         ...prev,
-                        specialty_needed: doctor.specialties[0] || '',
-                        consultation_fee_agreed: doctor.consultation_fee?.toString() || ''
+                        specialty_needed: doctor.specialties[0] || ''
                       }));
-                      setShowReferralModal(true);
+                      setShowRequestModal(true);
                     }}
                     className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                   >
-                    Refer Patient
+                    Request Consultation
                   </button>
                 </div>
               </div>
             ))}
           </div>
 
-          {filteredDoctors.length === 0 && !loading && (
+          {filteredSpecialists.length === 0 && !loading && (
             <div className="text-center py-12">
-              <UserPlus className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <Stethoscope className="h-12 w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No specialists found</h3>
               <p className="text-gray-500">Try adjusting your search criteria</p>
             </div>
@@ -494,25 +526,25 @@ const Referrals = () => {
         </div>
       )}
 
-      {/* My Referrals Tab */}
-      {activeTab === 'my-referrals' && (
+      {/* My Requests Tab */}
+      {activeTab === 'my-requests' && (
         <div className="space-y-6">
-          {referrals.map((referral) => (
-            <div key={referral.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {requests.map((request) => (
+            <div key={request.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Referral to Dr. {referral.referred_doctor.full_name}
+                    Request to Dr. {request.specialist_doctor.full_name}
                   </h3>
-                  <p className="text-sm text-gray-600">Patient: {referral.patient_name}</p>
-                  <p className="text-sm text-gray-600">Procedure: {referral.procedure_type}</p>
+                  <p className="text-sm text-gray-600">Patient: {request.patient_name}</p>
+                  <p className="text-sm text-gray-600">Specialty: {request.specialty_needed}</p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(referral.status)}`}>
-                    {referral.status}
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
+                    {request.status}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getUrgencyColor(referral.urgency)}`}>
-                    {referral.urgency}
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getUrgencyColor(request.urgency)}`}>
+                    {request.urgency}
                   </span>
                 </div>
               </div>
@@ -521,61 +553,61 @@ const Referrals = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Patient Information</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Age: {referral.patient_age}</p>
-                    <p>Gender: {referral.patient_gender}</p>
-                    <p>Phone: {referral.patient_phone}</p>
+                    <p>Age: {request.patient_age}</p>
+                    <p>Gender: {request.patient_gender}</p>
                   </div>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Appointment Details</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Preferred Date: {referral.preferred_appointment_date}</p>
-                    <p>Time Slot: {referral.preferred_time_slot}</p>
-                    <p>Fee: {referral.consultation_fee_agreed} EGP</p>
+                    <p>Requested Date: {request.requested_date}</p>
+                    <p>Time: {request.requested_time}</p>
+                    <p>Commission: {request.commission_amount} EGP</p>
                   </div>
                 </div>
               </div>
 
               <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Clinical Notes</h4>
-                <p className="text-sm text-gray-600">{referral.clinical_notes}</p>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Case Description</h4>
+                <p className="text-sm text-gray-600">{request.case_description}</p>
               </div>
 
               <div className="text-xs text-gray-500">
-                Sent on {new Date(referral.created_at).toLocaleDateString()}
+                Sent on {new Date(request.created_at).toLocaleDateString()}
               </div>
             </div>
           ))}
 
-          {referrals.length === 0 && !loading && (
+          {requests.length === 0 && !loading && (
             <div className="text-center py-12">
               <Send className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No referrals sent</h3>
-              <p className="text-gray-500">Start by finding specialists to refer your patients to</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No requests sent</h3>
+              <p className="text-gray-500">Start by finding specialists to request consultations</p>
             </div>
           )}
         </div>
       )}
 
-      {/* Received Referrals Tab */}
-      {activeTab === 'received-referrals' && (
+      {/* Received Requests Tab */}
+      {activeTab === 'received-requests' && (
         <div className="space-y-6">
-          {receivedReferrals.map((referral) => (
-            <div key={referral.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+          {receivedRequests.map((request) => (
+            <div key={request.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Referral from Dr. {referral.referring_doctor.full_name}
+                    Request from Dr. {request.requesting_doctor.full_name}
                   </h3>
-                  <p className="text-sm text-gray-600">Patient: {referral.patient_name}</p>
-                  <p className="text-sm text-gray-600">Procedure: {referral.procedure_type}</p>
+                  <p className="text-sm text-gray-600">Clinic: {request.clinic_name}</p>
+                  <p className="text-sm text-gray-600">Patient: {request.patient_name}</p>
+                  <p className="text-sm text-gray-600">Specialty: {request.specialty_needed}</p>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(referral.status)}`}>
-                    {referral.status}
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getStatusColor(request.status)}`}>
+                    {request.status}
                   </span>
-                  <span className={`px-2 py-1 text-xs font-medium rounded ${getUrgencyColor(referral.urgency)}`}>
-                    {referral.urgency}
+                  <span className={`px-2 py-1 text-xs font-medium rounded ${getUrgencyColor(request.urgency)}`}>
+                    {request.urgency}
                   </span>
                 </div>
               </div>
@@ -584,45 +616,36 @@ const Referrals = () => {
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Patient Information</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Age: {referral.patient_age}</p>
-                    <p>Gender: {referral.patient_gender}</p>
-                    <p>Phone: {referral.patient_phone}</p>
-                    {referral.medical_history && <p>Medical History: {referral.medical_history}</p>}
-                    {referral.current_medications && <p>Medications: {referral.current_medications}</p>}
-                    {referral.allergies && <p>Allergies: {referral.allergies}</p>}
+                    <p>Age: {request.patient_age}</p>
+                    <p>Gender: {request.patient_gender}</p>
                   </div>
                 </div>
                 <div>
                   <h4 className="text-sm font-medium text-gray-900 mb-2">Appointment Details</h4>
                   <div className="text-sm text-gray-600 space-y-1">
-                    <p>Preferred Date: {referral.preferred_appointment_date}</p>
-                    <p>Time Slot: {referral.preferred_time_slot}</p>
-                    <p>Agreed Fee: {referral.consultation_fee_agreed} EGP</p>
+                    <p>Requested Date: {request.requested_date}</p>
+                    <p>Time: {request.requested_time}</p>
+                    <p>Your Commission: {request.commission_amount} EGP</p>
                   </div>
                 </div>
               </div>
 
               <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-900 mb-2">Clinical Notes</h4>
-                <p className="text-sm text-gray-600">{referral.clinical_notes}</p>
+                <h4 className="text-sm font-medium text-gray-900 mb-2">Case Description</h4>
+                <p className="text-sm text-gray-600">{request.case_description}</p>
               </div>
 
-              {referral.status === 'pending' && (
+              {request.status === 'pending' && (
                 <div className="flex items-center space-x-3 pt-4 border-t border-gray-200">
                   <button
-                    onClick={() => handleReferralResponse(referral.id, 'accept')}
+                    onClick={() => handleRequestResponse(request.id, 'accept')}
                     className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center"
                   >
                     <CheckCircle className="h-4 w-4 mr-2" />
                     Accept
                   </button>
                   <button
-                    onClick={() => {
-                      const message = prompt('Please provide a reason for declining:');
-                      if (message) {
-                        handleReferralResponse(referral.id, 'decline', message);
-                      }
-                    }}
+                    onClick={() => handleRequestResponse(request.id, 'decline')}
                     className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
                   >
                     <XCircle className="h-4 w-4 mr-2" />
@@ -632,28 +655,28 @@ const Referrals = () => {
               )}
 
               <div className="text-xs text-gray-500 mt-4">
-                Received on {new Date(referral.created_at).toLocaleDateString()}
+                Received on {new Date(request.created_at).toLocaleDateString()}
               </div>
             </div>
           ))}
 
-          {receivedReferrals.length === 0 && !loading && (
+          {receivedRequests.length === 0 && !loading && (
             <div className="text-center py-12">
               <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">No referrals received</h3>
-              <p className="text-gray-500">Set up your clinic profile to start receiving referrals</p>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">No requests received</h3>
+              <p className="text-gray-500">Set up your specialist profile to start receiving requests</p>
             </div>
           )}
         </div>
       )}
 
-      {/* My Clinic Profile Tab */}
+      {/* My Specialist Profile Tab */}
       {activeTab === 'my-profile' && (
         <div className="max-w-2xl mx-auto">
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Clinic Profile Setup</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-6">Specialist Profile Setup</h3>
             
-            <form onSubmit={handleUpdateClinicProfile} className="space-y-6">
+            <form onSubmit={handleUpdateProfile} className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -662,8 +685,8 @@ const Referrals = () => {
                   <input
                     type="text"
                     required
-                    value={clinicProfile.clinic_name}
-                    onChange={(e) => setClinicProfile(prev => ({ ...prev, clinic_name: e.target.value }))}
+                    value={doctorProfile.clinic_name}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, clinic_name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -674,8 +697,8 @@ const Referrals = () => {
                   </label>
                   <input
                     type="tel"
-                    value={clinicProfile.clinic_phone}
-                    onChange={(e) => setClinicProfile(prev => ({ ...prev, clinic_phone: e.target.value }))}
+                    value={doctorProfile.clinic_phone}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, clinic_phone: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -687,30 +710,61 @@ const Referrals = () => {
                 </label>
                 <input
                   type="text"
-                  value={clinicProfile.clinic_address}
-                  onChange={(e) => setClinicProfile(prev => ({ ...prev, clinic_address: e.target.value }))}
+                  value={doctorProfile.clinic_address}
+                  onChange={(e) => setDoctorProfile(prev => ({ ...prev, clinic_address: e.target.value }))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
 
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Governorate *
+                  </label>
+                  <select
+                    required
+                    value={doctorProfile.governorate}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, governorate: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select governorate</option>
+                    {governorates.map(gov => (
+                      <option key={gov} value={gov}>{gov}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    City
+                  </label>
+                  <input
+                    type="text"
+                    value={doctorProfile.city}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, city: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Specialties for Referrals *
+                  Specialties for Consultations *
                 </label>
                 <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border border-gray-300 rounded-lg p-3">
                   {specialties.map(specialty => (
                     <label key={specialty.id} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={clinicProfile.specialties.includes(specialty.name)}
+                        checked={doctorProfile.specialties.includes(specialty.name)}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setClinicProfile(prev => ({
+                            setDoctorProfile(prev => ({
                               ...prev,
                               specialties: [...prev.specialties, specialty.name]
                             }));
                           } else {
-                            setClinicProfile(prev => ({
+                            setDoctorProfile(prev => ({
                               ...prev,
                               specialties: prev.specialties.filter(s => s !== specialty.name)
                             }));
@@ -724,15 +778,29 @@ const Referrals = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Consultation Fee (EGP)
                   </label>
                   <input
                     type="number"
-                    value={clinicProfile.consultation_fee}
-                    onChange={(e) => setClinicProfile(prev => ({ ...prev, consultation_fee: e.target.value }))}
+                    value={doctorProfile.consultation_fee}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, consultation_fee: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Commission Rate (%)
+                  </label>
+                  <input
+                    type="number"
+                    min="5"
+                    max="20"
+                    value={doctorProfile.commission_rate}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, commission_rate: parseInt(e.target.value) }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
@@ -743,8 +811,8 @@ const Referrals = () => {
                   </label>
                   <input
                     type="text"
-                    value={clinicProfile.available_hours}
-                    onChange={(e) => setClinicProfile(prev => ({ ...prev, available_hours: e.target.value }))}
+                    value={doctorProfile.available_hours}
+                    onChange={(e) => setDoctorProfile(prev => ({ ...prev, available_hours: e.target.value }))}
                     placeholder="e.g., 9:00-17:00"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -760,15 +828,15 @@ const Referrals = () => {
                     <label key={day} className="flex items-center">
                       <input
                         type="checkbox"
-                        checked={clinicProfile.available_days.includes(day.toLowerCase())}
+                        checked={doctorProfile.available_days.includes(day.toLowerCase())}
                         onChange={(e) => {
                           if (e.target.checked) {
-                            setClinicProfile(prev => ({
+                            setDoctorProfile(prev => ({
                               ...prev,
                               available_days: [...prev.available_days, day.toLowerCase()]
                             }));
                           } else {
-                            setClinicProfile(prev => ({
+                            setDoctorProfile(prev => ({
                               ...prev,
                               available_days: prev.available_days.filter(d => d !== day.toLowerCase())
                             }));
@@ -785,13 +853,13 @@ const Referrals = () => {
               <div className="flex items-center">
                 <input
                   type="checkbox"
-                  id="accepting_referrals"
-                  checked={clinicProfile.is_accepting_referrals}
-                  onChange={(e) => setClinicProfile(prev => ({ ...prev, is_accepting_referrals: e.target.checked }))}
+                  id="accepting_requests"
+                  checked={doctorProfile.is_accepting_requests}
+                  onChange={(e) => setDoctorProfile(prev => ({ ...prev, is_accepting_requests: e.target.checked }))}
                   className="mr-2"
                 />
-                <label htmlFor="accepting_referrals" className="text-sm text-gray-700">
-                  Currently accepting referrals
+                <label htmlFor="accepting_requests" className="text-sm text-gray-700">
+                  Currently accepting consultation requests
                 </label>
               </div>
 
@@ -799,111 +867,52 @@ const Referrals = () => {
                 type="submit"
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors"
               >
-                Update Clinic Profile
+                Update Specialist Profile
               </button>
             </form>
           </div>
         </div>
       )}
 
-      {/* Referral Modal */}
-      {showReferralModal && selectedDoctor && (
+      {/* Request Modal */}
+      {showRequestModal && selectedDoctor && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">
-                Refer Patient to Dr. {selectedDoctor.profiles.full_name}
+                Request Consultation with Dr. {selectedDoctor.profiles.full_name}
               </h2>
               <button
-                onClick={() => setShowReferralModal(false)}
+                onClick={() => setShowRequestModal(false)}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
                 <XCircle className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateReferral} className="p-6 space-y-6">
+            <form onSubmit={handleCreateRequest} className="p-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Patient Name *
+                    Clinic Name *
                   </label>
                   <input
                     type="text"
                     required
-                    value={referralForm.patient_name}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, patient_name: e.target.value }))}
+                    value={requestForm.clinic_name}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, clinic_name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Patient Phone
-                  </label>
-                  <input
-                    type="tel"
-                    value={referralForm.patient_phone}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, patient_phone: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Age
-                  </label>
-                  <input
-                    type="number"
-                    value={referralForm.patient_age}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, patient_age: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Gender
-                  </label>
-                  <select
-                    value={referralForm.patient_gender}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, patient_gender: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="">Select</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Urgency *
-                  </label>
-                  <select
-                    required
-                    value={referralForm.urgency}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, urgency: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  >
-                    <option value="routine">Routine</option>
-                    <option value="urgent">Urgent</option>
-                    <option value="emergency">Emergency</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Specialty Needed *
                   </label>
                   <select
                     required
-                    value={referralForm.specialty_needed}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, specialty_needed: e.target.value }))}
+                    value={requestForm.specialty_needed}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, specialty_needed: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="">Select specialty</option>
@@ -912,120 +921,121 @@ const Referrals = () => {
                     ))}
                   </select>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Procedure Type *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={referralForm.procedure_type}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, procedure_type: e.target.value }))}
-                    placeholder="e.g., Root canal, Extraction, etc."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Clinical Notes *
-                </label>
-                <textarea
-                  required
-                  rows={4}
-                  value={referralForm.clinical_notes}
-                  onChange={(e) => setReferralForm(prev => ({ ...prev, clinical_notes: e.target.value }))}
-                  placeholder="Describe the patient's condition, symptoms, and reason for referral..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Medical History
+                    Requested Date *
                   </label>
-                  <textarea
-                    rows={3}
-                    value={referralForm.medical_history}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, medical_history: e.target.value }))}
-                    placeholder="Relevant medical history..."
+                  <input
+                    type="date"
+                    required
+                    value={requestForm.requested_date}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, requested_date: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Medications
+                    Requested Time *
                   </label>
-                  <textarea
-                    rows={3}
-                    value={referralForm.current_medications}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, current_medications: e.target.value }))}
-                    placeholder="List current medications..."
+                  <input
+                    type="time"
+                    required
+                    value={requestForm.requested_time}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, requested_time: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Allergies
-                </label>
-                <input
-                  type="text"
-                  value={referralForm.allergies}
-                  onChange={(e) => setReferralForm(prev => ({ ...prev, allergies: e.target.value }))}
-                  placeholder="Known allergies..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Date
-                  </label>
-                  <input
-                    type="date"
-                    value={referralForm.preferred_appointment_date}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, preferred_appointment_date: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Preferred Time
+                    Patient Name *
                   </label>
                   <input
                     type="text"
-                    value={referralForm.preferred_time_slot}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, preferred_time_slot: e.target.value }))}
-                    placeholder="e.g., Morning, 2:00 PM"
+                    required
+                    value={requestForm.patient_name}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, patient_name: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Consultation Fee (EGP)
+                    Patient Age
                   </label>
                   <input
                     type="number"
-                    value={referralForm.consultation_fee_agreed}
-                    onChange={(e) => setReferralForm(prev => ({ ...prev, consultation_fee_agreed: e.target.value }))}
+                    value={requestForm.patient_age}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, patient_age: e.target.value }))}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Patient Gender
+                  </label>
+                  <select
+                    value={requestForm.patient_gender}
+                    onChange={(e) => setRequestForm(prev => ({ ...prev, patient_gender: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  >
+                    <option value="">Select</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Urgency *
+                </label>
+                <select
+                  required
+                  value={requestForm.urgency}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, urgency: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="routine">Routine</option>
+                  <option value="urgent">Urgent</option>
+                  <option value="emergency">Emergency</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Case Description *
+                </label>
+                <textarea
+                  required
+                  rows={4}
+                  value={requestForm.case_description}
+                  onChange={(e) => setRequestForm(prev => ({ ...prev, case_description: e.target.value }))}
+                  placeholder="Describe the patient's condition and reason for consultation..."
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <h4 className="font-medium text-blue-900 mb-2">Consultation Details</h4>
+                <div className="text-sm text-blue-700 space-y-1">
+                  <p>Consultation Fee: {selectedDoctor.consultation_fee} EGP</p>
+                  <p>Platform Commission ({selectedDoctor.commission_rate}%): {((selectedDoctor.consultation_fee * selectedDoctor.commission_rate) / 100).toFixed(2)} EGP</p>
+                  <p>Doctor Receives: {(selectedDoctor.consultation_fee - ((selectedDoctor.consultation_fee * selectedDoctor.commission_rate) / 100)).toFixed(2)} EGP</p>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-6 border-t border-gray-200">
                 <button
                   type="button"
-                  onClick={() => setShowReferralModal(false)}
+                  onClick={() => setShowRequestModal(false)}
                   className="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   Cancel
@@ -1035,7 +1045,7 @@ const Referrals = () => {
                   className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center"
                 >
                   <Send className="h-4 w-4 mr-2" />
-                  Send Referral
+                  Send Request
                 </button>
               </div>
             </form>
@@ -1052,4 +1062,4 @@ const Referrals = () => {
   );
 };
 
-export default Referrals;
+export default SpecialistDoctor;

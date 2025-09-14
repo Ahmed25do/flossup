@@ -10,7 +10,7 @@ import {
   GraduationCap, 
   Users, 
   Microscope, 
-  UserPlus,
+  Stethoscope,
   User,
   Menu,
   X,
@@ -37,7 +37,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { name: 'Education', href: '/education', icon: GraduationCap },
     { name: 'Social', href: '/social', icon: Users },
     { name: 'Lab Services', href: '/lab-services', icon: Microscope },
-    { name: 'Referrals', href: '/referrals', icon: UserPlus },
+    { name: 'Specialist Doctor', href: '/specialist-doctor', icon: Stethoscope },
     { name: 'Account', href: '/account', icon: User },
   ];
 
